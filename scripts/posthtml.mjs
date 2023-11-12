@@ -16,126 +16,74 @@ import {
 
 import { globSync } from "glob";
 
-const paths = globSync("src/**/*.html", {
-  ignore: "src/index.html",
-});
 
-console.log(paths);
-
-const dirs = paths.map((p) => path.dirname(path.resolve(p)));
-
-const promises = paths.map((p) => {
-  const filePath = path.resolve(p);
-
-  const dir = path.dirname(filePath);
-  const fileName = path.basename(filePath, ".html");
-
-  const cssModule = path.resolve(dir, fileName + ".css.json");
-  console.log("css module", cssModule);
-
-  console.log("filename", fileName);
-  path.resolve(dir, "style.css");
-
-  const rel = path.relative(path.resolve("src"), filePath);
-  console.log("rel", rel);
-  const phtml = postHTML(postHtmlcssModules(cssModule));
-
-  return readFile(p).then((value) => {
-    const s = value.toString();
-
-    return phtml.process(s).then((r) => {
-      console.log(r);
-      console.log(r.html);
-
-      const target = path.resolve("public", rel);
-
-      const dir = path.dirname(target);
-
-      console.log("target dir", dir);
-      return mkdir(dir, { recursive: true }).then((createdDir) => {
-        console.log("created dir", createdDir);
-        return writeFile(target, r.html).then(() => {
-          console.log("finish writing to ", target);
-        });
-      });
-    });
+async function processHTML() {
+  const htmlPaths = globSync("src/**/*.html", {
+    ignore: "src/index.html",
   });
-});
 
-console.log(dirs);
+  console.log("html files", htmlPaths);
 
-Promise.all(promises).then(() => {
+  const promises = htmlPaths.map(async (htmlPath) => {
+    const filePath = path.resolve(htmlPath);
+
+    const dir = path.dirname(filePath);
+    const baseName = path.basename(filePath, ".html");
+
+    const cssJson = path.resolve(dir, baseName + ".css.json");
+    console.log("filename", baseName);
+    console.log("css module", cssJson);
+
+    const relativePath = path.relative(path.resolve("src"), filePath);
+    console.log("rel to src", relativePath);
+    const phtml = postHTML(postHtmlcssModules(cssJson));
+
+    const result = await phtml.process((await readFile(htmlPath)).toString());
+    console.log(result.html);
+    const target = path.resolve("public", relativePath);
+    const targetDir = path.dirname(target);
+    console.log("target dir", targetDir);
+    const createdDir = await mkdir(targetDir, { recursive: true });
+    createdDir && console.log("created dir", createdDir);
+    await writeFile(target, result.html);
+    console.log("finish writing to ", target);
+  });
+
+  await Promise.all(promises);
+
   console.log("all promises resolved");
 
   const inFile = path.resolve("src/index.html");
-
-  const outFile = path.resolve("public/index.html");
-
-  const tmpFile = path.resolve("public/index.tmp.html");
-
   const outDir = path.resolve("public");
-  copyFile(inFile, tmpFile).then(() => {
-    const processor = postHTML([postHtmlModules({ from: tmpFile.toString() })]);
+  const outFile = path.resolve(outDir, "index.html");
+  const tmpFile = path.resolve(outDir, "index.tmp.html");
 
-    readFile(tmpFile).then((value) => {
-      const s = value.toString();
-      console.log(s);
+  await copyFile(inFile, tmpFile);
 
-      processor.process(s).then((r) => {
-        console.log(r);
+  console.log("tmp file created", tmpFile);
 
-        console.log(r.html);
+  const processor = postHTML([postHtmlModules({ from: tmpFile.toString() })]);
 
-        writeFile(outFile, r.html).then(() => {
-          unlink(tmpFile)
-            .then(() => console.log("tmp file deleted", tmpFile))
-            .then(() => {
-              readdir(outDir).then((dir) => {
-                console.log("dir", dir);
+  const value = await readFile(tmpFile);
+  const result = await processor.process(value.toString());
 
-                dir.forEach((d) =>
-                  stat(path.resolve(outDir, d)).then((stat) => {
-                    if (stat.isDirectory()) {
-                      console.log("stat", stat);
-                      console.log(
-                        "will delete folder",
-                        path.resolve(outDir, d)
-                      );
-                      rm(path.resolve(outDir, d), { recursive: true }).then(
-                        () => {
-                          console.log(
-                            "deleted folder",
-                            path.resolve(outDir, d)
-                          );
-                        }
-                      );
-                    }
-                  })
-                );
-              });
-            })
-            .catch((err) => {
-              console.log("could not delete file", tmpFile);
-            });
-        });
-      });
-    });
+  await writeFile(outFile, result.html);
+
+  console.log("finish writing HTML");
+
+  await unlink(tmpFile);
+  console.log("tmp file deleted", tmpFile);
+  const entries = await readdir(outDir);
+  console.log("dir", entries);
+
+  entries.forEach(async (name) => {
+    const entry = path.resolve(outDir, name);
+    if ((await stat(entry)).isDirectory()) {
+      console.log("will delete folder", entry);
+      await rm(entry, { recursive: true });
+      console.log("deleted folder", entry);
+    }
   });
-});
+}
 
-// const inFile = path.resolve("src/index.html");
-
-// const outFile = path.resolve("build/index.html");
-
-// const processor = postHTML([postHtmlModules({ from: inFile.toString() })]);
-
-// readFile(inFile).then((value) => {
-//   const s = value.toString();
-//   console.log(s);
-
-//   processor.process(s).then((r) => {
-//     console.log(r);
-
-//     console.log(r.html);
-//   });
-// });
+processHTML();
