@@ -5,17 +5,24 @@
   "scripts": {
     "build": "npm run process:css && npm run process:html",
     "process:html": "node scripts/posthtml.mjs",
-    "process:css": "node scripts/postcss.mjs"
+    "process:css": "node scripts/postcss.mjs",
+    "lint": "stylelint 'src/**/*.css'",
+    "lint:fix": "npm run lint -- --fix"
   },
   "keywords": [
     "css"
   ],
   "devDependencies": {
+    "cssnano": "^6.0.1",
     "glob": "^10.3.10",
     "postcss": "^8.4.31",
     "postcss-modules": "^6.0.0",
     "posthtml": "^0.16.6",
+    "posthtml-beautify": "^0.7.0",
     "posthtml-css-modules": "^0.1.3",
-    "posthtml-modules": "^0.9.1"
+    "posthtml-modules": "^0.9.1",
+    "stylelint": "^15.11.0",
+    "stylelint-config-standard": "^34.0.0",
+    "stylelint-order": "^6.0.3"
   }
 }

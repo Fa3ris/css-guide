@@ -2,6 +2,7 @@ import { readFile, writeFile } from "fs/promises";
 import path from "path";
 import postcss from "postcss";
 import postcssModules from "postcss-modules";
+import cssnano from "cssnano";
 
 import { globSync } from "glob";
 
@@ -16,12 +17,16 @@ async function toCssModules() {
     paths.map(async (p) => {
       const from = path.resolve(p);
       const content = await readFile(from);
-      const result = await processor.process(content, { from, outFile });
+      const result = await processor.process(content, { from });
       return result.css;
     })
   );
 
-  await writeFile(outFile, allCss.join("\n"));
+  const result = await postcss([cssnano()]).process(allCss.join("\n"), {
+    from: outFile,
+  });
+
+  await writeFile(outFile, result.css);
   console.log("finish process CSS");
 }
 
