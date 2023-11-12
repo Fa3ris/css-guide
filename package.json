@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "description": "learning CSS once again",
   "scripts": {
-    "transform": "postcss src/styles/style.css --output public/style.css",
     "build": "npm run process:css && npm run process:html",
     "process:html": "node scripts/posthtml.mjs",
     "process:css": "node scripts/postcss.mjs"
@@ -12,12 +11,8 @@
     "css"
   ],
   "devDependencies": {
-    "autoprefixer": "^10.4.16",
-    "cssnano": "^6.0.1",
     "glob": "^10.3.10",
     "postcss": "^8.4.31",
-    "postcss-cli": "^10.1.0",
-    "postcss-focus": "^7.0.0",
     "postcss-modules": "^6.0.0",
     "posthtml": "^0.16.6",
     "posthtml-css-modules": "^0.1.3",
