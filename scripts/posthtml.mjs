@@ -1,6 +1,7 @@
 import postHTML from "posthtml";
 import postHtmlModules from "posthtml-modules";
 import postHtmlcssModules from "posthtml-css-modules";
+import postHtmlBeautify from "posthtml-beautify";
 
 import path from "path";
 import {
@@ -16,7 +17,6 @@ import {
 
 import { globSync } from "glob";
 
-
 async function processHTML() {
   const htmlPaths = globSync("src/**/*.html", {
     ignore: "src/index.html",
@@ -30,16 +30,25 @@ async function processHTML() {
     const dir = path.dirname(filePath);
     const baseName = path.basename(filePath, ".html");
 
-    const cssJson = path.resolve(dir, baseName + ".css.json");
-    console.log("filename", baseName);
-    console.log("css module", cssJson);
+    const entries = await readdir(dir);
+    const entry = entries.find((e) => e.endsWith(".css.json"));
 
-    const relativePath = path.relative(path.resolve("src"), filePath);
-    console.log("rel to src", relativePath);
-    const phtml = postHTML(postHtmlcssModules(cssJson));
+    let phtml;
+    if (!entry) {
+      console.error("no .css.json found in dir", dir);
+      phtml = postHTML();
+    } else {
+      const cssJson = path.resolve(dir, entry);
+      console.log("filename", baseName);
+      console.log("css module", cssJson);
+
+      phtml = postHTML(postHtmlcssModules(cssJson));
+    }
 
     const result = await phtml.process((await readFile(htmlPath)).toString());
     console.log(result.html);
+    const relativePath = path.relative(path.resolve("src"), filePath);
+    console.log("rel to src", relativePath);
     const target = path.resolve("public", relativePath);
     const targetDir = path.dirname(target);
     console.log("target dir", targetDir);
@@ -62,7 +71,10 @@ async function processHTML() {
 
   console.log("tmp file created", tmpFile);
 
-  const processor = postHTML([postHtmlModules({ from: tmpFile.toString() })]);
+  const processor = postHTML([
+    postHtmlModules({ from: tmpFile.toString() }),
+    postHtmlBeautify(),
+  ]);
 
   const value = await readFile(tmpFile);
   const result = await processor.process(value.toString());
