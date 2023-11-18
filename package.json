@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "description": "learning CSS once again",
   "scripts": {
-    "build": "npm run process:css && npm run process:html",
+    "build": "node scripts/build.mjs",
+    "watch": "node scripts/watch.mjs",
     "process:html": "node scripts/posthtml.mjs",
     "process:css": "node scripts/postcss.mjs",
     "lint": "stylelint 'src/**/*.css'",
@@ -13,6 +14,7 @@
     "css"
   ],
   "devDependencies": {
+    "chokidar": "^3.5.3",
     "cssnano": "^6.0.1",
     "glob": "^10.3.10",
     "postcss": "^8.4.31",

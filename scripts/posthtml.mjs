@@ -17,7 +17,7 @@ import {
 
 import { globSync } from "glob";
 
-async function processHTML() {
+export async function processHTML() {
   const htmlPaths = globSync("src/**/*.html", {
     ignore: "src/index.html",
   });
@@ -97,5 +97,3 @@ async function processHTML() {
     }
   });
 }
-
-processHTML();

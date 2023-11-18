@@ -6,7 +6,7 @@ import cssnano from "cssnano";
 
 import { globSync } from "glob";
 
-async function toCssModules() {
+export async function toCssModules() {
   const processor = postcss([postcssModules]);
 
   const paths = globSync("src/**/*.css");
@@ -29,5 +29,3 @@ async function toCssModules() {
   await writeFile(outFile, result.css);
   console.log("finish process CSS");
 }
-
-toCssModules();
