@@ -1,0 +1,29 @@
+
+
+.container {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+
+.container p {
+    text-align: justify;
+}
+
+.title {
+    color: #375e97;
+}
+
+.job-title {
+    color: #999999;
+}
+
+.sub-title {
+    font-style: italic;
+}
+
+.details {
+    background-color: #eeeeee;
+    border: 5px solid purple;
+
+}
